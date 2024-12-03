@@ -3,6 +3,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 use Config;
 use Text::ParseWords qw(shellwords quotewords);
+use PDL::Core::Dev;
 
 my ($include_path, $lib_path, $linkname);
 my $ppfile = "GD.pd";
@@ -72,22 +73,26 @@ unless( defined( $include_path ) ) {
           . "Please add the correct library path to Makefile.PL or install $lib_name.\n";
 }
 
-# Make sure everything we wanted is found:
-if (!(defined $include_path && defined $lib_path)) {
-    $msg .= "Skipping build of $package_name.\n";
-    write_dummy_make( $msg );
-    return;
-}
+die $msg if $msg;
 
 my $package = [$ppfile, $lib_name, $package_name];
-my %hash = pdlpp_stdargs_int($package);
+my %hash = pdlpp_stdargs($package);
 $hash{VERSION_FROM} = $ppfile;
 $hash{DEFINE} = $ENV{GD_DEFINE};
 $hash{LIBS} = [qq{-L"$lib_path" -l$linkname}];
 $hash{INC} = PDL_INCLUDE() . qq{ -I"$include_path"};
-push( @{ $hash{TYPEMAPS} }, 'typemap' );
+$hash{CONFIGURE_REQUIRES} = {
+  'ExtUtils::MakeMaker' => 0,
+  'PDL' => '2.094',
+};
+$hash{PREREQ_PM} = {
+  'PDL' => '2.094',
+};
+$hash{TEST_REQUIRES} = {
+  'Test::More' => '0.88',
+};
+$hash{AUTHOR} = 'PerlDL Developers <pdl-general@lists.sourceforge.net>';
 
-undef &MY::postamble; # suppress warning
-*MY::postamble = sub { pdlpp_postamble_int( $package ); };
+sub MY::postamble { pdlpp_postamble( $package ); }
 
 WriteMakefile(%hash);
