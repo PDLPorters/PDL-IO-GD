@@ -1,3 +1,6 @@
+2.101 2024-12-03
+- split out from PDL 2.095
+
 2.0: 30 Mar 2006 (Judd Taylor)
     - Transferred to new name PDL::IO::GD, and modified for inclusion to the 
         PDL CVS tree.
