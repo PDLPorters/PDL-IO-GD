@@ -9,10 +9,11 @@ my ($include_path, $lib_path, $linkname);
 my $ppfile = "GD.pd";
 my $package_name = "PDL::IO::GD";
 my $lib_name = "GD";
-my @find_libs = ( 'libgd.so', 'libgd.a', 'libgd.dll.a', 'bgd.dll' );
+my @find_libs = ( "libgd.$Config{dlext}", 'libgd.a', 'libgd.dll.a', 'bgd.dll' );
 my @find_incs = ( 'gd.h' );
 my @lib_locations = grep defined, (
     $ENV{GD_LIBS},
+    find_macos_path('lib'),
     '/usr/lib64',
     '/usr/local/lib64',
     '/lib64',
@@ -27,6 +28,7 @@ my @lib_locations = grep defined, (
 );
 my @inc_locations = grep defined, (
     $ENV{GD_INC},
+    find_macos_path('include'),
     '/usr/include',
     '/usr/local/include',
     $Config{usrinc},
@@ -34,6 +36,14 @@ my @inc_locations = grep defined, (
         ? (map {s/"//g; $_} quotewords('\s+', 1, $Config{cppflags}))
         : shellwords($Config{cppflags})),
 );
+
+sub find_macos_path {
+  return if $^O ne 'darwin';
+  my $pref = `brew --prefix gd`;
+  return if !$pref;
+  chomp $pref;
+  qq{$pref/$_[0]};
+}
 
 my $msg = "";
 
